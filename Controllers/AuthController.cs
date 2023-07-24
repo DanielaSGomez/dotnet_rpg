@@ -3,30 +3,48 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using dotnet_rpg.Data;
+using dotnet_rpg.Dtos.User;
+using dotnet_rpg.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace dotnet_rpg.Controllers
 {
+    [ApiController]
     [Route("[controller]")]
-    public class AuthController : Controller
+    public class AuthController : ControllerBase
     {
-        private readonly ILogger<AuthController> _logger;
+        private readonly IAuthRepository _authRepository;
 
-        public AuthController(ILogger<AuthController> logger)
+        public AuthController (IAuthRepository authRepository)
         {
-            _logger = logger;
+            _authRepository = authRepository;
         }
 
-        public IActionResult Index()
+        [HttpPost("Register")]
+        public async Task<ActionResult<ServiceResponse<int>>> Register (UserRegisterDto request)
         {
-            return View();
+            var response = await _authRepository.Register( new User {UserName = request.UserName}, request.Password);
+            if(!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [HttpPost("Login")]
+        public async Task<ActionResult<ServiceResponse<int>>> Login (UserLoginDto request)
         {
-            return View("Error!");
+            var response = await _authRepository.Login( request.UserName, request.Password);
+            if(!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
         }
     }
 }
